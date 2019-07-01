@@ -1,3 +1,5 @@
+import fetch from 'cross-fetch'
+
 // SYNCHRONOUS ACTIONS
 export const SELECT_SUBREDDIT = 'SELECT_SUBREDDIT'
 
@@ -39,8 +41,6 @@ function receivePosts(subreddit, json) {
 }
 
 // Async Actions
-import fetch from 'cross-fetch'
-
 export const REQUEST_POSTS = 'REQUEST_POSTS'
 function requestPosts(subreddit) {
   return {
@@ -67,16 +67,34 @@ export function invalidateSubreddit(subreddit) {
   }
 }
 
-export function fetchPosts(subreddit) {
-  return function(dispatch) {
+function fetchPosts(subreddit) {
+  return dispatch => {
     dispatch(requestPosts(subreddit))
     return fetch(`https://www.reddit.com/r/${subreddit}.json`)
-      .then(
-        response => response.json(),
-        error => console.log('An error occurred.', error)
-      )
-      .then(json =>
-        dispatch(receivePosts(subreddit, json))
-      )
+      .then(response => response.json())
+      .then(json => dispatch(receivePosts(subreddit, json)))
+  }
+}
+
+function shouldFetchPosts(state, subreddit) {
+  const posts = state.postsBySubreddit[subreddit]
+  if (!posts) {
+    return true
+  } else if (posts.isFetching) {
+    return false
+  } else {
+    return posts.didInvalidate
+  }
+}
+
+export function fetchPostsIfNeeded(subreddit) {
+  return (dispatch, getState) => {
+    if (shouldFetchPosts(getState(), subreddit)) {
+      // Dispatch a thunk from thunk!
+      return dispatch(fetchPosts(subreddit))
+    } else {
+      // Let the calling code know there's nothing to wait for.
+      return Promise.resolve()
+    }
   }
 }
