@@ -7,7 +7,7 @@ import * as serviceWorker from './serviceWorker';
 import thunkMiddleware from 'redux-thunk'
 import { createLogger } from 'redux-logger'
 import { createStore, applyMiddleware } from 'redux'
-import { selectSubreddit, fetchPosts } from './actions/actions'
+import { selectSubreddit, fetchPosts, fetchPostsIfNeeded } from './actions/actions'
 import rootReducer from './reducers/reducers'
 
 const loggerMiddleware = createLogger()
